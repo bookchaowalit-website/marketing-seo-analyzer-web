@@ -1,75 +1,65 @@
-import { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import { SAMPLE, inspect } from "@/lib/seo";
 
-export const runtime = 'edge';
+// Stateless JSON-RPC MCP endpoint running the same basic checks as the page on HTML the caller sends.
+// It never fetches a URL: there is no crawl tool, only analysis of the snapshot in the request.
 
-interface MCPRequest {
-  jsonrpc: '2.0';
-  id: number | string;
-  method: string;
-  params?: any;
-}
+type RpcRequest = { id?: number | string | null; method?: string; params?: { name?: string; arguments?: Record<string, unknown> } };
 
-interface MCPResponse {
-  jsonrpc: '2.0';
-  id: number | string;
-  result?: any;
-  error?: {
-    code: number;
-    message: string;
-  };
-}
+const MAX_HTML = 200_000;
 
-async function getData() {
-  return { message: 'Sample data' };
-}
+const TOOLS = [
+  {
+    name: "analyze_html",
+    description: "Run the six basic checks (title, title length, meta description, h1, image alt, links) on an HTML snapshot",
+    inputSchema: { type: "object", properties: { html: { type: "string", maxLength: MAX_HTML } }, required: ["html"] },
+  },
+  { name: "get_sample", description: "The sample snapshot the page starts with, and its report", inputSchema: { type: "object", properties: {} } },
+];
 
-export async function POST(request: NextRequest) {
-  let requestId: number | string = 0;
-
-  try {
-    const body: MCPRequest = await request.json();
-    requestId = body.id;
-    const { method, params, id } = body;
-
-    let result: any = {};
-
-    switch (method) {
-      case 'initialize':
-        result = {
-          protocolVersion: '2024-11-05',
-          capabilities: { tools: {} },
-          serverInfo: { name: 'MCP Server', version: '1.0.0' }
-        };
-        break;
-
-      case 'tools/list':
-        result = {
-          tools: [
-            {
-              name: 'get_data',
-              description: 'Get sample data',
-              inputSchema: { type: 'object', properties: {} }
-            }
-          ]
-        };
-        break;
-
-      case 'tools/call':
-        result = await getData();
-        break;
-
-      default:
-        throw new Error(`Unknown method: ${method}`);
-    }
-
-    return Response.json({ jsonrpc: '2.0', id, result });
-
-  } catch (error) {
-    return Response.json({
-      jsonrpc: '2.0',
-      id: requestId,
-      error: { code: -32603, message: error instanceof Error ? error.message : 'Internal error' }
-    }, { status: 500 });
+class RpcError extends Error {
+  constructor(readonly code: number, message: string) {
+    super(message);
   }
 }
 
+function callTool(name: string | undefined, args: Record<string, unknown> = {}) {
+  switch (name) {
+    case "analyze_html": {
+      if (typeof args.html !== "string") throw new RpcError(-32602, "html must be a string");
+      if (args.html.length > MAX_HTML) throw new RpcError(-32602, `html is longer than ${MAX_HTML} characters`);
+      return inspect(args.html);
+    }
+    case "get_sample":
+      return { html: SAMPLE, report: inspect(SAMPLE) };
+    default:
+      throw new RpcError(-32602, `Unknown tool: ${String(name)}`);
+  }
+}
+
+export async function POST(request: Request) {
+  let id: RpcRequest["id"] = null;
+  try {
+    const body = (await request.json()) as RpcRequest;
+    id = body.id ?? null;
+    let result: unknown;
+    switch (body.method) {
+      case "initialize":
+        result = { protocolVersion: "2024-11-05", capabilities: { tools: {} }, serverInfo: { name: "SEO Inspection Bench", version: "1.0.0" } };
+        break;
+      case "tools/list":
+        result = { tools: TOOLS };
+        break;
+      case "tools/call":
+        result = callTool(body.params?.name, body.params?.arguments);
+        break;
+      default:
+        throw new RpcError(-32601, `Unknown method: ${String(body.method)}`);
+    }
+    return NextResponse.json({ jsonrpc: "2.0", id, result });
+  } catch (error) {
+    const code = error instanceof RpcError ? error.code : -32700;
+    const message = error instanceof RpcError ? error.message : "Parse error";
+    return NextResponse.json({ jsonrpc: "2.0", id, error: { code, message } }, { status: 400 });
+  }
+}
