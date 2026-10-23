@@ -1,46 +1,35 @@
-# bookchaowalit-seo-analyzer-frontend — Product brief
+# SEO Inspection Bench — Product truth
 
-**Slug:** `bookchaowalit-website/bookchaowalit-seo-analyzer-frontend`  
-**Generated:** 2026-08-11 (bulk Book Dev closeout)  
-**Status:** starter / portfolio boundary
+> Inferred from the code and copy (no user interview). Checked against the portfolio card claims review
+> (`portfolio-site-web/docs/audits/CARD-CLAIMS-REVIEW-2026-10.md`, row `seo-analyzer`) on 2026-10-23.
 
-## Purpose
+## What it is
 
-Portfolio repository under Book Dev. This brief records ownership and the
-current honest status so the nested tree is not an empty shell in the task
-system.
+A client-only bench that runs six basic checks on HTML you paste in: title present, title length 30–60, meta description of 50+ characters, an h1, alt on every image, at least one link. It never fetches or crawls a URL; the URL field is a label.
 
-## Runnable path
+## Who it is for
 
-See `README.md` for install and run instructions when present.
+A portfolio visitor who wants a quick sanity check of a page snapshot.
 
-## Limits
+## What works today
 
-- Not claimed as production-ready unless README and tests prove it.
-- Mobile smoke / emulator acceptance is separate and toolchain-dependent.
+1. Paste HTML; the score (share of passed checks) and each check update as you type.
+2. Attributes are read in any order and quote style (an apostrophe inside a double-quoted description is kept), an h1 counts even when its text is inside nested elements, and only a real `alt` attribute counts as alt text.
+3. Copy the report as text, or reset the sample.
+4. `/api/mcp` answers JSON-RPC with `analyze_html` (the same checks on HTML in the request, up to 200,000 characters) and `get_sample`; there is no crawl tool, and unknown tools and methods get JSON-RPC errors.
+5. Front-end and server errors go to Sentry (errors only, personal data stripped) when `NEXT_PUBLIC_SENTRY_DSN` is set.
 
-## Source README excerpt
+## What does not work (and must not be claimed)
 
-```
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+- No fetching of any URL, no 20+ criteria, Open Graph, structured data or Core Web Vitals, and no portfolio-wide automated audits (removed from the portfolio card in the 2026-10 review).
+- The checks are regex-level string parsing of a snapshot, not a browser DOM: script-built content is invisible to them.
+- No ranking prediction, history or saved reports.
 
-## Getting Started
+## Live URL and deploy state
 
-First, run the development server:
+- Live: https://seo-analyzer.bookchaowalit.com (HTTP 200 on 2026-10-23).
+- The Vercel project `bookchaowalit-seo-analyzer-frontend` is deployed only by CLI. Its last production deploy is the CVE patch (2026-10-23, CLI, commit 5ea4d18). Its Git link names the old repository `bookchaowalit/bookchaowalit-seo-analyzer-frontend`, so a push to `main` does not deploy: the L2 work stays undeployed until the owner reconnects Vercel Git to this repository (owner action D9). `NEXT_PUBLIC_SENTRY_DSN` is already set on the Vercel project (Sentry project `marketing-seo-analyzer-web`, org `personal-yu0`).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Boundaries
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize an
-```
+- Browser-only apart from the stateless `/api/mcp` route, which analyses only the HTML sent to it.
