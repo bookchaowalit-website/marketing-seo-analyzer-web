@@ -27,8 +27,9 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   state goes in a `Pill` with a word (Up, Down, Pass, Fail).
 - **Colour is never the only signal**: dots sit next to names, the peak is named in text.
 - **Say where the data comes from** in a note under the panels (sample, live, how fresh).
-- **Floor:** text ≥ 12px, controls ≥ 44px, 3px focus ring, 4.5:1 text contrast and 3:1 chart
-  lines in light and dark, no horizontal scroll at 320px.
+- **Floor:** text ≥ 12px, controls ≥ 44px, 3px focus ring, 4.5:1 text contrast (placeholders
+  included) and 3:1 for chart lines, grid lines and input edges in light and dark, no horizontal
+  scroll at 320px. A selected row shows the accent bar, not only a tint.
 
 ## Pieces
 
