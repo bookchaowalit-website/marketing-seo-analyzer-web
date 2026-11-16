@@ -43,8 +43,11 @@ describe("SEO check page", () => {
 
   it("rescores as you type and names the failing checks in words", () => {
     type(textarea(), "<h1>Only a heading</h1>");
-    expect(stats()[0]).toBe("Score33/ 100Incomplete signal");
-    expect(stats()[1]).toBe("Checks passed2 / 64 to fix");
+    expect(stats()[0]).toBe("Score20/ 100Incomplete signal");
+    expect(stats()[1]).toBe("Checks passed1 / 54 to fix, 1 not applicable");
+    const images = [...host.querySelectorAll(".ds-row")].find((row) => row.querySelector(".ds-row-name")?.textContent === "Images have alt");
+    expect(images?.querySelector(".ds-row-detail")?.textContent).toBe("no images");
+    expect(images?.querySelector(".ds-pill")?.textContent).toBe("N/A");
     const fails = [...host.querySelectorAll(".ds-row")].filter((row) => row.querySelector(".ds-pill")?.textContent === "Fail").map((row) => row.querySelector(".ds-row-name")?.textContent);
     expect(fails).toEqual(["Title present", "Title length 30–60", "Meta description", "Has links"]);
     expect(host.querySelector("#checks-heading")?.textContent).toBe("Incomplete signal");
@@ -65,12 +68,26 @@ describe("SEO check page", () => {
 
   it("says so when the clipboard refuses, and reset brings the sample back", async () => {
     Object.defineProperty(navigator, "clipboard", { value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) }, configurable: true });
-    type(textarea(), "");
+    type(textarea(), "<p>Draft</p>");
     await press(button("Copy report"));
     expect(host.querySelector('[role="status"]')?.textContent).toContain("Copy failed");
     await press(button("Reset sample"));
     expect(textarea().value).toBe(SAMPLE);
     expect((host.querySelector("input") as HTMLInputElement).value).toBe("https://bookchaowalit.com");
     expect(host.querySelector('[role="status"]')?.textContent).toBe("");
+  });
+
+  it("shows an empty state instead of a score when the HTML box is empty or only spaces", () => {
+    for (const value of ["", "   \n\t "]) {
+      type(textarea(), value);
+      expect(stats().slice(0, 2)).toEqual(["Score—paste HTML to score", "Checks passed—nothing checked yet"]);
+      expect(host.querySelector('.ds-callout[role="status"]')?.textContent).toContain("Paste a page's HTML to check it");
+      expect(host.querySelector('[role="img"]')).toBeNull();
+      expect(host.querySelector(".ds-meter")).toBeNull();
+      expect(host.querySelectorAll(".ds-row")).toHaveLength(0);
+      expect(button("Copy report")).toBeUndefined();
+    }
+    type(textarea(), SAMPLE);
+    expect(stats()[0]).toBe("Score100/ 100Healthy signal");
   });
 });

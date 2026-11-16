@@ -15,7 +15,7 @@ describe("MCP route", () => {
   it("analyze_html runs the page's checks on the given snapshot", async () => {
     const html = "<title>Short</title><h1><span>Hi</span></h1>";
     const { result } = await (await rpc({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "analyze_html", arguments: { html } } })).json();
-    expect(result.score).toBe(50);
+    expect(result.score).toBe(40);
     expect(result.checks.find((c: { name: string }) => c.name === "H1 present").detail).toBe("Hi");
   });
 

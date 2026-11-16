@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { DashFoot, DashTop, Pill, Stat } from "@/components/dashboard-shell";
-import { SAMPLE, formatReport, inspect, verdict } from "@/lib/seo";
+import { SAMPLE, formatReport, inspect, isBlank, verdict } from "@/lib/seo";
 
 const SAMPLE_LABEL = "https://bookchaowalit.com";
 
@@ -11,7 +11,10 @@ export default function Home() {
   const [html, setHtml] = useState(SAMPLE);
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
   const report = useMemo(() => inspect(html), [html]);
-  const passed = report.checks.filter((check) => check.ok).length;
+  const blank = isBlank(html);
+  const applicable = report.checks.filter((check) => check.applicable);
+  const passed = applicable.filter((check) => check.ok).length;
+  const skipped = report.checks.length - applicable.length;
 
   const copyReport = async () => {
     try {
@@ -42,8 +45,8 @@ export default function Home() {
         </div>
 
         <ul className="ds-stats" aria-label="Result at a glance">
-          <Stat label="Score" value={report.score} unit="/ 100" note={verdict(report.score)} />
-          <Stat label="Checks passed" value={`${passed} / ${report.checks.length}`} note={passed === report.checks.length ? "nothing to fix" : `${report.checks.length - passed} to fix`} />
+          <Stat label="Score" value={blank ? "—" : report.score} unit={blank ? undefined : "/ 100"} note={blank ? "paste HTML to score" : verdict(report.score)} />
+          <Stat label="Checks passed" value={blank ? "—" : `${passed} / ${applicable.length}`} note={blank ? "nothing checked yet" : `${passed === applicable.length ? "nothing to fix" : `${applicable.length - passed} to fix`}${skipped ? `, ${skipped} not applicable` : ""}`} />
           <Stat label="Snapshot" value={html.length.toLocaleString("en-US")} unit="chars" note="updates as you type" />
         </ul>
 
@@ -67,27 +70,44 @@ export default function Home() {
           </section>
 
           <section className="ds-panel" aria-labelledby="checks-heading">
-            <div className="ds-panel-head">
-              <div>
-                <h2 id="checks-heading">{verdict(report.score)}</h2>
-                <p>{report.score} out of 100</p>
-              </div>
-            </div>
-            <div className="ds-meter" role="img" aria-label={`${report.score} out of 100`}><span style={{ width: `${report.score}%` }} /></div>
-            <ul className="ds-rows" style={{ marginTop: 8 }}>
-              {report.checks.map((check) => (
-                <li key={check.name} className="ds-row">
-                  <span className="ds-row-name">{check.name}</span>
-                  <span className="ds-row-detail">{check.detail}</span>
-                  <span className="ds-row-value"><Pill tone={check.ok ? "green" : "red"}>{check.ok ? "Pass" : "Fail"}</Pill></span>
-                </li>
-              ))}
-            </ul>
-            <div className="ds-actions" style={{ marginTop: 12 }}>
-              <button type="button" className="ds-button" onClick={copyReport}>{copied === "done" ? "Copied" : "Copy report"}</button>
-              <span className="ds-sr" role="status">{copied === "done" ? "Report copied." : copied === "failed" ? "Copy failed. Select the checks and copy them by hand." : ""}</span>
-              {copied === "failed" ? <span className="ds-note">Copy failed in this browser.</span> : null}
-            </div>
+            {blank ? (
+              <>
+                <div className="ds-panel-head">
+                  <div>
+                    <h2 id="checks-heading">No HTML yet</h2>
+                    <p>Nothing to score</p>
+                  </div>
+                </div>
+                <p className="ds-callout" role="status">
+                  <strong>Paste a page&apos;s HTML to check it</strong>
+                  <span>The six checks and the score appear here once the HTML box has something in it.</span>
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="ds-panel-head">
+                  <div>
+                    <h2 id="checks-heading">{verdict(report.score)}</h2>
+                    <p>{report.score} out of 100</p>
+                  </div>
+                </div>
+                <div className="ds-meter" role="img" aria-label={`${report.score} out of 100`}><span style={{ width: `${report.score}%` }} /></div>
+                <ul className="ds-rows" style={{ marginTop: 8 }}>
+                  {report.checks.map((check) => (
+                    <li key={check.name} className="ds-row">
+                      <span className="ds-row-name">{check.name}</span>
+                      <span className="ds-row-detail">{check.detail}</span>
+                      <span className="ds-row-value">{check.applicable ? <Pill tone={check.ok ? "green" : "red"}>{check.ok ? "Pass" : "Fail"}</Pill> : <Pill tone="grey">N/A</Pill>}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="ds-actions" style={{ marginTop: 12 }}>
+                  <button type="button" className="ds-button" onClick={copyReport}>{copied === "done" ? "Copied" : "Copy report"}</button>
+                  <span className="ds-sr" role="status">{copied === "done" ? "Report copied." : copied === "failed" ? "Copy failed. Select the checks and copy them by hand." : ""}</span>
+                  {copied === "failed" ? <span className="ds-note">Copy failed in this browser.</span> : null}
+                </div>
+              </>
+            )}
           </section>
         </div>
 

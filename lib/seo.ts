@@ -1,7 +1,13 @@
 // SEO inspection bench: basic checks over a pasted HTML snapshot. Pure string parsing, no fetch, no DOM.
 
-export type Check = { name: string; ok: boolean; detail: string };
+/** A check that does not apply (no images to check alt text on) is not a pass: it is left out of the score. */
+export type Check = { name: string; ok: boolean; applicable: boolean; detail: string };
 export type Report = { checks: Check[]; score: number };
+
+/** True when the snapshot holds nothing to check (empty or only whitespace). */
+export function isBlank(html: string): boolean {
+  return html.trim() === "";
+}
 
 export const SAMPLE =
   '<title>Demo Page Title That Is Long Enough</title>\n<meta name="description" content="A demo description that is long enough for SEO checks.">\n<h1>Hello</h1>\n<img src="/x.png" alt="x">\n<a href="/a">A</a>';
@@ -55,14 +61,17 @@ export function inspect(html: string): Report {
   const { images, withAlt } = countImages(html);
   const links = startTags(html, "a").length;
   const checks: Check[] = [
-    { name: "Title present", ok: title.length > 0, detail: title || "missing" },
-    { name: "Title length 30–60", ok: title.length >= 30 && title.length <= 60, detail: `${title.length} chars` },
-    { name: "Meta description", ok: description.length >= 50, detail: `${description.length} chars` },
-    { name: "H1 present", ok: Boolean(h1), detail: h1 || "missing" },
-    { name: "Images have alt", ok: images === 0 || withAlt === images, detail: `${withAlt}/${images}` },
-    { name: "Has links", ok: links > 0, detail: String(links) },
+    { name: "Title present", ok: title.length > 0, applicable: true, detail: title || "missing" },
+    { name: "Title length 30–60", ok: title.length >= 30 && title.length <= 60, applicable: true, detail: `${title.length} chars` },
+    { name: "Meta description", ok: description.length >= 50, applicable: true, detail: `${description.length} chars` },
+    { name: "H1 present", ok: Boolean(h1), applicable: true, detail: h1 || "missing" },
+    images === 0
+      ? { name: "Images have alt", ok: false, applicable: false, detail: "no images" }
+      : { name: "Images have alt", ok: withAlt === images, applicable: true, detail: `${withAlt}/${images}` },
+    { name: "Has links", ok: links > 0, applicable: true, detail: String(links) },
   ];
-  return { checks, score: Math.round((checks.filter((check) => check.ok).length / checks.length) * 100) };
+  const applicable = checks.filter((check) => check.applicable);
+  return { checks, score: Math.round((applicable.filter((check) => check.ok).length / applicable.length) * 100) };
 }
 
 export function verdict(score: number): string {
@@ -70,6 +79,6 @@ export function verdict(score: number): string {
 }
 
 export function formatReport(label: string, report: Report): string {
-  const lines = report.checks.map((check) => `${check.ok ? "PASS" : "FAIL"} ${check.name} — ${check.detail}`);
+  const lines = report.checks.map((check) => `${!check.applicable ? "N/A" : check.ok ? "PASS" : "FAIL"} ${check.name} — ${check.detail}`);
   return `${label}\nSEO snapshot score: ${report.score}/100\n${lines.join("\n")}`;
 }
