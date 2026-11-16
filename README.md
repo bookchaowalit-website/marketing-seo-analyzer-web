@@ -34,4 +34,3 @@ scan on every push and PR to `main`.
 - `app/api/mcp/route.ts`: stateless JSON-RPC endpoint with `analyze_html` and `get_sample`.
 - `lib/sentry.ts` + `instrumentation*.ts`: error reporting to Sentry, errors only, personal data stripped; off when `NEXT_PUBLIC_SENTRY_DSN` is unset.
 - `app/dashboard-shell.css` + `components/dashboard-shell.tsx`: the copied-in Dashboard shell (`DASHBOARD.md`).
-- `app/more-projects/page.tsx`: shared portfolio link page (copied per repository, not a package).

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SAMPLE, findDescription, findH1, findTitle, formatReport, inspect, parseAttributes, verdict } from "@/lib/seo";
+import { SAMPLE, findDescription, isBlank, findH1, findTitle, formatReport, inspect, parseAttributes, verdict } from "@/lib/seo";
 
 const check = (html: string, name: string) => inspect(html).checks.find((c) => c.name === name)!;
 
@@ -10,10 +10,22 @@ describe("inspect on the sample", () => {
     expect(report.checks.every((c) => c.ok)).toBe(true);
   });
 
-  it("scores an empty snapshot 17 (only 'images have alt' passes with no images)", () => {
+  it("scores an empty snapshot 0: with no images the alt check is not applicable, not a pass", () => {
     const report = inspect("");
-    expect(report.score).toBe(17);
+    expect(report.score).toBe(0);
     expect(check("", "Title present").detail).toBe("missing");
+    expect(check("", "Images have alt")).toEqual({ name: "Images have alt", ok: false, applicable: false, detail: "no images" });
+  });
+
+  it("leaves the alt check out of the score when there are no images", () => {
+    const noImages = SAMPLE.replace(/<img[^>]*>\n?/, "");
+    expect(inspect(noImages).score).toBe(100);
+    expect(formatReport("x", inspect(noImages))).toContain("N/A Images have alt — no images");
+  });
+
+  it("knows a whitespace-only snapshot is blank", () => {
+    expect(isBlank(" \n\t")).toBe(true);
+    expect(isBlank("<p>x</p>")).toBe(false);
   });
 });
 
