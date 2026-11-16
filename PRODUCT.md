@@ -1,11 +1,11 @@
-# SEO Inspection Bench — Product truth
+# SEO Check (dashboard) — Product truth
 
 > Inferred from the code and copy (no user interview). Checked against the portfolio card claims review
 > (`portfolio-site-web/docs/audits/CARD-CLAIMS-REVIEW-2026-10.md`, row `seo-analyzer`) on 2026-10-23.
 
 ## What it is
 
-A client-only bench that runs six basic checks on HTML you paste in: title present, title length 30–60, meta description of 50+ characters, an h1, alt on every image, at least one link. It never fetches or crawls a URL; the URL field is a label.
+A client-only page that runs six basic checks on HTML you paste in: title present, title length 30–60, meta description of 50+ characters, an h1, alt on every image, at least one link. It never fetches or crawls a URL; the URL field is a label.
 
 ## Who it is for
 

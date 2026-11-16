@@ -1,13 +1,100 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { DashFoot, DashTop, Pill, Stat } from "@/components/dashboard-shell";
 import { SAMPLE, formatReport, inspect, verdict } from "@/lib/seo";
 
+const SAMPLE_LABEL = "https://bookchaowalit.com";
+
 export default function Home() {
-  const [url, setUrl] = useState("https://bookchaowalit.com");
+  const [url, setUrl] = useState(SAMPLE_LABEL);
   const [html, setHtml] = useState(SAMPLE);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
   const report = useMemo(() => inspect(html), [html]);
-  const copyReport = async () => { try { await navigator.clipboard.writeText(formatReport(url, report)); setCopied(true); window.setTimeout(() => setCopied(false), 1500); } catch { setCopied(false); } };
-  return <div className="inspector"><main className="inspector-shell"><nav className="inspector-nav"><span><strong>SEO</strong> / INSPECTION BENCH</span><span>LOCAL SNAPSHOT / NO CRAWL</span></nav><header className="inspector-hero"><div><div className="snapshot-note">HTML specimen / live local analysis</div><h1>Find the signal in the markup.</h1></div><p>Paste a page snapshot and read the checks that can be verified here. This tool does not fetch or crawl the URL.</p></header><section className="bench" aria-label="SEO inspection bench"><div className="source-panel"><label className="field-label" htmlFor="source-url">Source label</label><input id="source-url" className="url-field" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="URL (label only)" /><label className="field-label" htmlFor="source-html" style={{ marginTop: 20 }}>HTML snapshot</label><textarea id="source-html" className="html-field" value={html} onChange={(event) => setHtml(event.target.value)} spellCheck={false} /><div className="source-footer"><span>Analysis updates as you type.</span><span className="source-counter">{html.length} chars</span></div></div><div className="report-panel"><div className="report-top"><div><span className="report-label">Lint ledger / result</span><h2>{verdict(report.score)}</h2></div><div className="report-score"><strong>{report.score}</strong><span>/100</span><div className="score-bar" role="img" aria-label={`${report.score} out of 100`}><span style={{ width: `${report.score}%` }} /></div></div></div><ul className="check-list">{report.checks.map((check) => <li className="check-row" key={check.name}><span className={`status-mark ${check.ok ? "" : "is-fail"}`} role="img" aria-label={check.ok ? "Pass" : "Fail"} /><span className="check-name">{check.name}</span><span className="check-detail">{check.detail}</span></li>)}</ul><div className="report-actions"><button className="action primary" type="button" onClick={copyReport}>{copied ? "Copied report" : "Copy report"}</button><button className="action" type="button" onClick={() => { setUrl("https://bookchaowalit.com"); setHtml(SAMPLE); }}>Reset sample</button></div><p className="report-foot">Checks are intentionally basic: title, description, heading, image alt text, and links. Treat this as a local inspection aid, not a ranking prediction.</p></div></section><footer className="inspector-footer">The score is derived only from the HTML currently in the editor. No request is sent to the source URL.</footer></main></div>;
+  const passed = report.checks.filter((check) => check.ok).length;
+
+  const copyReport = async () => {
+    try {
+      await navigator.clipboard.writeText(formatReport(url, report));
+      setCopied("done");
+      window.setTimeout(() => setCopied("idle"), 1500);
+    } catch {
+      setCopied("failed");
+    }
+  };
+  const reset = () => {
+    setUrl(SAMPLE_LABEL);
+    setHtml(SAMPLE);
+    setCopied("idle");
+  };
+
+  return (
+    <div className="ds">
+      <a className="ds-skip" href="#main">Skip to content</a>
+      <DashTop name="SEO check" tagline="Basic on-page checks" />
+
+      <main id="main" tabIndex={-1} className="ds-main">
+        <div className="ds-head">
+          <div>
+            <h1>On-page SEO</h1>
+            <p>Six checks on the HTML you paste <Pill tone="grey">No crawl</Pill></p>
+          </div>
+        </div>
+
+        <ul className="ds-stats" aria-label="Result at a glance">
+          <Stat label="Score" value={report.score} unit="/ 100" note={verdict(report.score)} />
+          <Stat label="Checks passed" value={`${passed} / ${report.checks.length}`} note={passed === report.checks.length ? "nothing to fix" : `${report.checks.length - passed} to fix`} />
+          <Stat label="Snapshot" value={html.length.toLocaleString("en-US")} unit="chars" note="updates as you type" />
+        </ul>
+
+        <div className="ds-grid">
+          <section className="ds-panel" aria-labelledby="source-heading">
+            <div className="ds-panel-head">
+              <div>
+                <h2 id="source-heading">Snapshot</h2>
+                <p>Paste the page&apos;s HTML; the URL is only a label</p>
+              </div>
+              <button type="button" className="ds-plain" onClick={reset}>Reset sample</button>
+            </div>
+            <div className="ds-form">
+              <label className="ds-field">URL label
+                <input className="ds-input" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" autoComplete="off" />
+              </label>
+              <label className="ds-field">HTML
+                <textarea className="ds-input" value={html} onChange={(event) => setHtml(event.target.value)} spellCheck={false} />
+              </label>
+            </div>
+          </section>
+
+          <section className="ds-panel" aria-labelledby="checks-heading">
+            <div className="ds-panel-head">
+              <div>
+                <h2 id="checks-heading">{verdict(report.score)}</h2>
+                <p>{report.score} out of 100</p>
+              </div>
+            </div>
+            <div className="ds-meter" role="img" aria-label={`${report.score} out of 100`}><span style={{ width: `${report.score}%` }} /></div>
+            <ul className="ds-rows" style={{ marginTop: 8 }}>
+              {report.checks.map((check) => (
+                <li key={check.name} className="ds-row">
+                  <span className="ds-row-name">{check.name}</span>
+                  <span className="ds-row-detail">{check.detail}</span>
+                  <span className="ds-row-value"><Pill tone={check.ok ? "green" : "red"}>{check.ok ? "Pass" : "Fail"}</Pill></span>
+                </li>
+              ))}
+            </ul>
+            <div className="ds-actions" style={{ marginTop: 12 }}>
+              <button type="button" className="ds-button" onClick={copyReport}>{copied === "done" ? "Copied" : "Copy report"}</button>
+              <span className="ds-sr" role="status">{copied === "done" ? "Report copied." : copied === "failed" ? "Copy failed. Select the checks and copy them by hand." : ""}</span>
+              {copied === "failed" ? <span className="ds-note">Copy failed in this browser.</span> : null}
+            </div>
+          </section>
+        </div>
+
+        <p className="ds-note">The score comes only from the HTML in the box: title, description, heading, image alt text and links. Nothing is sent to the URL, and it is not a ranking prediction.</p>
+      </main>
+
+      <DashFoot source="https://github.com/bookchaowalit-website/marketing-seo-analyzer-web" />
+    </div>
+  );
 }
