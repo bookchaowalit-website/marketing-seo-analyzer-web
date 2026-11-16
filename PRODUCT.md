@@ -27,8 +27,10 @@ A portfolio visitor who wants a quick sanity check of a page snapshot.
 
 ## Live URL and deploy state
 
-- Live: https://seo-analyzer.bookchaowalit.com (HTTP 200 on 2026-10-23).
-- The Vercel project `bookchaowalit-seo-analyzer-frontend` is deployed only by CLI. Its last production deploy is the CVE patch (2026-10-23, CLI, commit 5ea4d18). Its Git link names the old repository `bookchaowalit/bookchaowalit-seo-analyzer-frontend`, so a push to `main` does not deploy: the L2 work stays undeployed until the owner reconnects Vercel Git to this repository (owner action D9). `NEXT_PUBLIC_SENTRY_DSN` is already set on the Vercel project (Sentry project `marketing-seo-analyzer-web`, org `personal-yu0`).
+- Live: https://seo-analyzer.bookchaowalit.com (HTTP 200 on 2026-11-16, Dashboard shell).
+- Vercel Git deploy is connected to `bookchaowalit-website/marketing-seo-analyzer-web` (owner action D9 is done): a push to `main`
+  deploys. Last production deploy: 2026-11-16, Git, commit 81548b6 (Dashboard shell move), Vercel status success.
+- `NEXT_PUBLIC_SENTRY_DSN` is set on the Vercel project (Sentry project `marketing-seo-analyzer-web`, org `personal-yu0`).
 
 ## Boundaries
 
