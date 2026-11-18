@@ -55,4 +55,4 @@ export function Stat({ label, value, unit, note }: { label: string; value: React
 }
 
 // The chart keeps its own state, so it lives in a "use client" module; this file stays usable from Server Components.
-export { ChartPanel, linePoints } from "./dashboard-chart";
+export { ChartPanel, axisSteps, linePoints } from "./dashboard-chart";

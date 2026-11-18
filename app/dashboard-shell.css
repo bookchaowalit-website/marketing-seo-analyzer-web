@@ -99,6 +99,8 @@
 .ds-chart-grid line { stroke: var(--ds-field-line); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
 .ds-chart-area { fill: var(--ds-chart-fill); stroke: none; }
 .ds-chart-line { fill: none; stroke: var(--ds-chart); stroke-width: 2.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+/* A single value: a zero-length line with round caps, so it stays a round dot on the stretched board. */
+.ds-chart-dot { stroke: var(--ds-chart); stroke-width: 10; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .ds-chart-peak { stroke: var(--ds-chart); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
 .ds-chart-x { grid-column: 2; position: relative; height: 16px; margin-top: 8px; color: var(--ds-muted); font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
 .ds-chart-x span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }

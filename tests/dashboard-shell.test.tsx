@@ -2,7 +2,7 @@
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ChartPanel, DashFoot, DashTop, Pill, Segmented, Stat, linePoints } from "@/components/dashboard-shell";
+import { ChartPanel, DashFoot, DashTop, Pill, Segmented, Stat, axisSteps, linePoints } from "@/components/dashboard-shell";
 
 // Tests for the copied-in Dashboard shell itself, so every app that copies it covers all of it.
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -69,6 +69,35 @@ describe("dashboard shell", () => {
     expect(host.querySelector(".ds-chart-peak")).toBeNull();
     render(<ChartPanel title="Clicks" summary="s" values={[1, 2, 3]} labels={["a to b", "b to c", "c to d"]} ticks={[0, 2]} tickLabels={["−3h", "now"]} max={3} unit="%" labelHeading="Interval" />);
     expect([...host.querySelectorAll(".ds-chart-x span")].map((span) => span.textContent)).toEqual(["−3h", "now"]);
+  });
+
+  it("draws one value as a dot, with no line or area sloping to the right edge", () => {
+    render(<ChartPanel title="Odd" summary="s" values={[1]} labels={["a"]} ticks={[0]} max={4} unit="%" labelHeading="x" />);
+    expect(host.querySelector(".ds-chart-area")).toBeNull();
+    expect(host.querySelector(".ds-chart-line")).toBeNull();
+    const dot = host.querySelector(".ds-chart-dot");
+    expect([dot?.getAttribute("x1"), dot?.getAttribute("y1"), dot?.getAttribute("y2")]).toEqual(["0", "75", "75"]);
+    render(<ChartPanel title="Two" summary="s" values={[1, 2]} labels={["a", "b"]} ticks={[0, 1]} max={4} unit="%" labelHeading="x" />);
+    expect(host.querySelector(".ds-chart-dot")).toBeNull();
+    expect(host.querySelector(".ds-chart-area")?.getAttribute("points")).toBe("0,100 0,75 1000,50 1000,100");
+  });
+
+  it("labels the y axis on the same top as the line, with enough decimals for small scales", () => {
+    expect(axisSteps(0)).toEqual([0, 0.25, 0.5, 0.75, 1]);
+    expect(axisSteps(0.002)).toEqual([0, 0.0005, 0.001, 0.0015, 0.002]);
+    expect(axisSteps(0.02)).toEqual([0, 0.005, 0.01, 0.015, 0.02]);
+    expect(axisSteps(1000)).toEqual([0, 250, 500, 750, 1000]);
+    render(<ChartPanel title="Zero" summary="s" values={[0, 0]} labels={["a", "b"]} ticks={[0, 1]} max={0} unit="%" labelHeading="x" />);
+    expect([...host.querySelectorAll(".ds-chart-y span")].map((span) => span.textContent)).toEqual(["0", "0.25", "0.5", "0.75", "1"]);
+  });
+
+  it("keeps only the current rows in the table when labels repeat", () => {
+    const chart = (values: number[], labels: string[]) => <ChartPanel title="Load" summary="s" values={values} labels={labels} ticks={[0]} max={4} unit="kWh" labelHeading="Hour" />;
+    render(chart([1, 2, 3], ["08:00", "08:00", "09:00"]));
+    press(button("Show table"));
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(3);
+    render(chart([3, 1], ["09:00", "08:00"]));
+    expect([...host.querySelectorAll("tbody tr")].map((row) => row.textContent)).toEqual(["09:003 (peak)", "08:001"]);
   });
 
   it("maps values onto a 1000 x 100 board, clamped, with a safe max", () => {

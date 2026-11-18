@@ -12,6 +12,8 @@ export default function Home() {
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
   const report = useMemo(() => inspect(html), [html]);
   const blank = isBlank(html);
+  // The page opens on (and resets to) demo HTML; say so wherever the score shows, not only "No crawl".
+  const isSample = html === SAMPLE;
   const applicable = report.checks.filter((check) => check.applicable);
   const passed = applicable.filter((check) => check.ok).length;
   const skipped = report.checks.length - applicable.length;
@@ -40,12 +42,12 @@ export default function Home() {
         <div className="ds-head">
           <div>
             <h1>On-page SEO</h1>
-            <p>Six checks on the HTML you paste <Pill tone="grey">No crawl</Pill></p>
+            <p>Six checks on the HTML you paste <Pill tone="grey">No crawl</Pill>{isSample ? <> <Pill tone="grey">Sample data</Pill></> : null}</p>
           </div>
         </div>
 
         <ul className="ds-stats" aria-label="Result at a glance">
-          <Stat label="Score" value={blank ? "—" : report.score} unit={blank ? undefined : "/ 100"} note={blank ? "paste HTML to score" : verdict(report.score)} />
+          <Stat label="Score" value={blank ? "—" : report.score} unit={blank ? undefined : "/ 100"} note={blank ? "paste HTML to score" : isSample ? `${verdict(report.score)}, sample HTML` : verdict(report.score)} />
           <Stat label="Checks passed" value={blank ? "—" : `${passed} / ${applicable.length}`} note={blank ? "nothing checked yet" : `${passed === applicable.length ? "nothing to fix" : `${applicable.length - passed} to fix`}${skipped ? `, ${skipped} not applicable` : ""}`} />
           <Stat label="Snapshot" value={html.length.toLocaleString("en-US")} unit="chars" note="updates as you type" />
         </ul>
@@ -88,7 +90,7 @@ export default function Home() {
                 <div className="ds-panel-head">
                   <div>
                     <h2 id="checks-heading">{verdict(report.score)}</h2>
-                    <p>{report.score} out of 100</p>
+                    <p>{report.score} out of 100{isSample ? " · from the sample HTML" : ""}</p>
                   </div>
                 </div>
                 <div className="ds-meter" role="img" aria-label={`${report.score} out of 100`}><span style={{ width: `${report.score}%` }} /></div>

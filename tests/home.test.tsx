@@ -35,7 +35,10 @@ afterEach(() => {
 describe("SEO check page", () => {
   it("opens on the sample with a full score and every check passing", () => {
     expect(host.querySelector("h1")?.textContent).toBe("On-page SEO");
-    expect(stats()).toEqual(["Score100/ 100Healthy signal", "Checks passed6 / 6nothing to fix", `Snapshot${SAMPLE.length}charsupdates as you type`]);
+    expect(stats()).toEqual(["Score100/ 100Healthy signal, sample HTML", "Checks passed6 / 6nothing to fix", `Snapshot${SAMPLE.length}charsupdates as you type`]);
+    // The opening score is from demo HTML, so the head and the result both say so.
+    expect([...host.querySelectorAll(".ds-head .ds-pill")].map((pill) => pill.textContent)).toEqual(["No crawl", "Sample data"]);
+    expect(host.querySelector("#checks-heading + p")?.textContent).toBe("100 out of 100 · from the sample HTML");
     expect([...host.querySelectorAll(".ds-row .ds-pill")].every((pill) => pill.textContent === "Pass")).toBe(true);
     expect(host.querySelector('[role="img"]')?.getAttribute("aria-label")).toBe("100 out of 100");
     expect(host.textContent).toContain("Nothing is sent to the URL");
@@ -44,6 +47,8 @@ describe("SEO check page", () => {
   it("rescores as you type and names the failing checks in words", () => {
     type(textarea(), "<h1>Only a heading</h1>");
     expect(stats()[0]).toBe("Score20/ 100Incomplete signal");
+    expect([...host.querySelectorAll(".ds-head .ds-pill")].map((pill) => pill.textContent)).toEqual(["No crawl"]);
+    expect(host.querySelector("#checks-heading + p")?.textContent).toBe("20 out of 100");
     expect(stats()[1]).toBe("Checks passed1 / 54 to fix, 1 not applicable");
     const images = [...host.querySelectorAll(".ds-row")].find((row) => row.querySelector(".ds-row-name")?.textContent === "Images have alt");
     expect(images?.querySelector(".ds-row-detail")?.textContent).toBe("no images");
@@ -74,6 +79,7 @@ describe("SEO check page", () => {
     await press(button("Reset sample"));
     expect(textarea().value).toBe(SAMPLE);
     expect((host.querySelector("input") as HTMLInputElement).value).toBe("https://bookchaowalit.com");
+    expect(host.querySelector(".ds-head")?.textContent).toContain("Sample data");
     expect(host.querySelector('[role="status"]')?.textContent).toBe("");
   });
 
@@ -88,6 +94,6 @@ describe("SEO check page", () => {
       expect(button("Copy report")).toBeUndefined();
     }
     type(textarea(), SAMPLE);
-    expect(stats()[0]).toBe("Score100/ 100Healthy signal");
+    expect(stats()[0]).toBe("Score100/ 100Healthy signal, sample HTML");
   });
 });
