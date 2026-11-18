@@ -55,4 +55,4 @@ export function Stat({ label, value, unit, note }: { label: string; value: React
 }
 
 // The chart has no state (its table switch is a native <details>), so it and its scale maths work from Server Components too.
-export { ChartPanel, axisSteps, chartTop, linePoints } from "./dashboard-chart";
+export { ChartPanel, axisSteps, chartTop, labelRoom, linePoints, pointAt, tickAt } from "./dashboard-chart";

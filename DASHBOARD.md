@@ -12,6 +12,7 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
 - **One question per page**, asked by the `h1` ("Electricity load"). The line under it says
   the period, the unit, and a `Sample data` pill when the numbers are not real.
 - **One period switch** (segmented control) at the top right; it changes every figure on the page.
+  Its options wrap to a new row with large text (flex wrap, no fixed widths).
   Leave it out when the data has no periods (status) rather than show a switch that does nothing.
 - **At most four stat tiles**: label, value with its unit, and one line of context ("at 13:00").
   On phones they become one grouped card with the value on the right.
@@ -19,8 +20,10 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   The switch is a native `<details>` in the panel head's flex row (its name stays `Show table`, the
   browser announces open or closed), sized by its own text so it wraps under the title with large text;
   the table opens without JavaScript and CSS (`:has`) hides the chart while it is open.
-  The SVG only draws; axis labels are HTML, so they never stretch. Each x label is capped at 14%
-  of the axis (30% on phones, where every other label is hidden) and cut with an ellipsis, so pass short `tickLabels`.
+  The SVG only draws; axis labels are HTML, so they never stretch. Each x label is capped at the
+  room its neighbours leave (`labelRoom`, from the real tick gaps; phones need twice the room) and cut
+  with an ellipsis, inner labels that would still collide are left out, so pass short `tickLabels`.
+  When each value counts a time bucket, pass `buckets`: points sit at bucket centres, ticks on bucket edges.
   The y scale tops out at four round grid gaps (two significant digits) that reach `max`, and the
   line uses the same top, so each label is the value of its grid line. The chart's `aria-label` says what it shows (low, peak).
 - **Breakdown list** beside the chart: name, one line of detail, value and a share bar. When a
@@ -41,8 +44,8 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
 | Piece | Where |
 |---|---|
 | Tokens `--ds-*` (light + dark, same palette as the App shell), top bar, head, segmented control, stat tiles, panels, line chart, table, breakdown rows (button or static), share bar, callout, form fields, slider, filled button, pills, footer | `app/dashboard-shell.css` |
-| `DashTop`, `DashFoot`, `Segmented`, `Stat`, `Pill`, re-exporting `ChartPanel`, `chartTop`, `axisSteps` and `linePoints` (all server-safe) | `components/dashboard-shell.tsx` |
-| `ChartPanel` (chart + `<details>` table switch, optional short `tickLabels`, repeated ticks drawn once), `chartTop`, `axisSteps`, `linePoints`; no state, so no `"use client"` | `components/dashboard-chart.tsx` |
+| `DashTop`, `DashFoot`, `Stat`, `Pill`, `Segmented` (render it from a client component: it takes an `onChange`), re-exporting `ChartPanel`, `chartTop`, `axisSteps`, `linePoints`, `pointAt`, `tickAt` and `labelRoom` (all server-safe) | `components/dashboard-shell.tsx` |
+| `ChartPanel` (chart + `<details>` table switch, optional short `tickLabels`, repeated ticks drawn once), `chartTop`, `axisSteps`, `linePoints`, `pointAt`, `tickAt`, `labelRoom`, `buckets` mode; no state, so no `"use client"` | `components/dashboard-chart.tsx` |
 | Tests for the shell itself, so an app that uses only part of it still covers all of it | `tests/dashboard-shell.test.tsx` |
 
 Put the font variable on `<html>` (not `<body>`): the tokens are defined on `:root`, so a font

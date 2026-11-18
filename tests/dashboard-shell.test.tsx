@@ -3,7 +3,7 @@ import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ChartPanel, DashFoot, DashTop, Pill, Segmented, Stat, axisSteps, chartTop, linePoints } from "@/components/dashboard-shell";
+import { ChartPanel, DashFoot, DashTop, Pill, Segmented, Stat, axisSteps, chartTop, labelRoom, linePoints } from "@/components/dashboard-shell";
 
 // Tests for the copied-in Dashboard shell itself, so every app that copies it covers all of it.
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -133,6 +133,36 @@ describe("dashboard shell", () => {
     render(<ChartPanel title="Odd" summary="s" values={[100.25]} labels={["a"]} ticks={[0]} max={100.25} unit="%" labelHeading="x" />);
     expect(host.querySelector(".ds-chart-y span:last-child")?.textContent).toBe("104");
     expect(Number(host.querySelector(".ds-chart-dot")?.getAttribute("y1"))).toBeCloseTo(100 - (100.25 / 104) * 100);
+  });
+
+  it("gives each x label the room its neighbours leave and drops inner labels that would collide", () => {
+    // Five hour ticks on a 24-hour axis (0, 6, 12, 18, 23 of 23).
+    const hours = [0, 6, 12, 18, 23].map((hour) => hour / 23);
+    expect(labelRoom(hours, 0.1).map(({ index }) => index)).toEqual([0, 1, 2, 3, 4]);
+    // Phones need twice the room: the tightest spots go first, the end labels stay.
+    expect(labelRoom(hours, 0.2).map(({ index }) => index)).toEqual([0, 2, 4]);
+    // Four even ticks: the third sits a third away from the end, so it gets only that gap, never more,
+    // and on a phone both inner labels give way rather than run into the end labels.
+    const even = labelRoom([0, 1 / 3, 2 / 3, 1], 0.1);
+    expect(even.map(({ room }) => Number(room.toFixed(3)))).toEqual([0.167, 0.333, 0.333, 0.167]);
+    expect(labelRoom([0, 1 / 3, 2 / 3, 1], 0.2)).toEqual([{ index: 0, room: 0.5 }, { index: 3, room: 0.5 }]);
+    expect(labelRoom([0.5], 0.2)).toEqual([{ index: 0, room: 1 }]);
+    expect(labelRoom([0], 0.2)).toEqual([{ index: 0, room: 1 }]);
+    render(<ChartPanel title="Day" summary="s" values={Array.from({ length: 24 }, (_, hour) => hour)} labels={Array.from({ length: 24 }, (_, hour) => `${hour}:00`)} ticks={[0, 6, 12, 18, 23]} max={30} unit="kWh" labelHeading="Hour" />);
+    const spans = [...host.querySelectorAll<HTMLElement>(".ds-chart-x span")];
+    expect(spans.map((span) => span.dataset.phone ?? "")).toEqual(["", "hide", "", "hide", ""]);
+    expect(spans[0].style.getPropertyValue("--ds-tick-room")).toBe("13.04%");
+    expect(spans[2].style.getPropertyValue("--ds-tick-room-phone")).toBe("47.83%");
+  });
+
+  it("puts bucket values at their bucket centres, with ticks on the bucket edges", () => {
+    expect(linePoints([10, 20], 40, true)).toBe("250,75 750,50");
+    render(<ChartPanel title="Clicks" summary="s" values={[10, 20]} labels={["a to b", "b to now"]} ticks={[0, 2]} tickLabels={["−4h", "now"]} max={40} unit="%" labelHeading="Interval" buckets />);
+    expect(host.querySelector(".ds-chart-area")?.getAttribute("points")).toBe("250,100 250,75 750,50 750,100");
+    expect(host.querySelector(".ds-chart-peak")?.getAttribute("x1")).toBe("750");
+    expect([...host.querySelectorAll<HTMLElement>(".ds-chart-x span")].map((span) => [span.textContent, span.style.left, span.dataset.edge])).toEqual([["−4h", "0%", "start"], ["now", "100%", "end"]]);
+    render(<ChartPanel title="One" summary="s" values={[5]} labels={["a to now"]} ticks={[0, 1]} tickLabels={["−2h", "now"]} max={10} unit="%" labelHeading="Interval" buckets />);
+    expect(host.querySelector(".ds-chart-dot")?.getAttribute("x1")).toBe("500");
   });
 
   it("maps values onto a 1000 x 100 board, clamped, with a safe max", () => {
