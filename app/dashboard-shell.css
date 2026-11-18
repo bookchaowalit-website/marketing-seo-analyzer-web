@@ -181,3 +181,6 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
   .ds-stat-note { grid-column: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .ds *, .ds *::before, .ds *::after { transition: none !important; } }
+
+/* The top bar is sticky: keep skip-link targets and keyboard-focused controls clear of it when the page scrolls to them. */
+html { scroll-padding-top: 64px; scroll-padding-bottom: 16px; }
