@@ -148,6 +148,9 @@ describe("dashboard shell", () => {
     expect(labelRoom([0, 1 / 3, 2 / 3, 1], 0.2)).toEqual([{ index: 0, room: 0.5 }, { index: 3, room: 0.5 }]);
     expect(labelRoom([0.5], 0.2)).toEqual([{ index: 0, room: 1 }]);
     expect(labelRoom([0], 0.2)).toEqual([{ index: 0, room: 1 }]);
+    // Ticks off the axis edges: the caller's first and last labels stay, only the middle gives way.
+    expect(labelRoom([0.04, 0.1, 0.5, 0.9, 0.96], 0.2).map(({ index }) => index)).toEqual([0, 2, 4]);
+    expect(labelRoom([0.45, 0.55], 0.5).map(({ index }) => index)).toEqual([0, 1]);
     render(<ChartPanel title="Day" summary="s" values={Array.from({ length: 24 }, (_, hour) => hour)} labels={Array.from({ length: 24 }, (_, hour) => `${hour}:00`)} ticks={[0, 6, 12, 18, 23]} max={30} unit="kWh" labelHeading="Hour" />);
     const spans = [...host.querySelectorAll<HTMLElement>(".ds-chart-x span")];
     expect(spans.map((span) => span.dataset.phone ?? "")).toEqual(["", "hide", "", "hide", ""]);

@@ -42,21 +42,25 @@ export function linePoints(values: number[], max: number, buckets = false): stri
  * The share of the axis each x label may take, from the real gaps to the labels beside it: a start label grows right
  * and an end label left, into half the gap each; an inner label is centred, so it gets the smaller gap (and stays
  * inside the axis). While some label has less than `minRoom`, the inner label at (or next to) the tightest spot is
- * dropped; the two end labels are always kept. Returns the kept positions' indexes with their room.
+ * dropped; the first and last labels the caller passed are always kept, even when neither sits on an axis edge. Returns the kept positions' indexes with their room.
  */
 export function labelRoom(positions: number[], minRoom: number): { index: number; room: number }[] {
   let kept = positions.map((at, index) => ({ index, at }));
   for (;;) {
-    const rooms = kept.map(({ at }, i) => {
-      const left = i > 0 ? at - kept[i - 1].at : 2 * at;
-      const right = i < kept.length - 1 ? kept[i + 1].at - at : 2 * (1 - at);
-      if (at === 0) return Math.min(i < kept.length - 1 ? right / 2 : 1, 1);
-      if (at === 1) return Math.min(i > 0 ? left / 2 : 1, 1);
+    // Room left by the neighbours alone; dropping a label can widen it, so it decides what gets dropped.
+    const gapRooms = kept.map(({ at }, i) => {
+      const left = i > 0 ? at - kept[i - 1].at : Infinity;
+      const right = i < kept.length - 1 ? kept[i + 1].at - at : Infinity;
+      if (at === 0) return Math.min(right / 2, 1);
+      if (at === 1) return Math.min(left / 2, 1);
       return Math.min(left, right, 1);
     });
-    const inner = (i: number) => kept[i] && kept[i].at !== 0 && kept[i].at !== 1;
+    // A centred label also has to stay inside the axis, which no drop can change.
+    const rooms = kept.map(({ at }, i) => (at === 0 || at === 1 ? gapRooms[i] : Math.min(gapRooms[i], 2 * at, 2 * (1 - at))));
+    // Only labels between the first and the last are ever dropped.
+    const inner = (i: number) => i > 0 && i < kept.length - 1;
     let tightest = -1;
-    rooms.forEach((room, i) => { if (room < minRoom - 1e-9 && (tightest < 0 || room < rooms[tightest])) tightest = i; });
+    gapRooms.forEach((room, i) => { if (room < minRoom - 1e-9 && (tightest < 0 || room < gapRooms[tightest])) tightest = i; });
     const drop = tightest < 0 ? -1 : inner(tightest) ? tightest : inner(tightest + 1) ? tightest + 1 : inner(tightest - 1) ? tightest - 1 : -1;
     if (drop < 0) return kept.map(({ index }, i) => ({ index, room: rooms[i] }));
     kept = kept.filter((_, i) => i !== drop);

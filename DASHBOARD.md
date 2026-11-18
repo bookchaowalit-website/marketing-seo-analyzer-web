@@ -15,14 +15,15 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   Its options wrap to a new row with large text (flex wrap, no fixed widths).
   Leave it out when the data has no periods (status) rather than show a switch that does nothing.
 - **At most four stat tiles**: label, value with its unit, and one line of context ("at 13:00").
-  On phones they become one grouped card with the value on the right.
+  On phones they become one grouped card with the value on the right, wrapping under the label
+  when the text is enlarged.
 - **One main chart**, with a `Show table` switch so every value can be read without the drawing.
   The switch is a native `<details>` in the panel head's flex row (its name stays `Show table`, the
   browser announces open or closed), sized by its own text so it wraps under the title with large text;
   the table opens without JavaScript and CSS (`:has`) hides the chart while it is open.
   The SVG only draws; axis labels are HTML, so they never stretch. Each x label is capped at the
   room its neighbours leave (`labelRoom`, from the real tick gaps; phones need twice the room) and cut
-  with an ellipsis, inner labels that would still collide are left out, so pass short `tickLabels`.
+  with an ellipsis, inner labels that would still collide are left out (never the first or last one passed), so pass short `tickLabels`.
   When each value counts a time bucket, pass `buckets`: points sit at bucket centres, ticks on bucket edges.
   The y scale tops out at four round grid gaps (two significant digits) that reach `max`, and the
   line uses the same top, so each label is the value of its grid line. The chart's `aria-label` says what it shows (low, peak).
