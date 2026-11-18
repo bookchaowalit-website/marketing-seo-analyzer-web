@@ -115,7 +115,10 @@
 .ds-chart-dot { stroke: var(--ds-chart); stroke-width: 10; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .ds-chart-peak { stroke: var(--ds-chart); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
 .ds-chart-x { grid-column: 2; position: relative; height: 16px; margin-top: 8px; color: var(--ds-muted); font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
-.ds-chart-x span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+/* Labels are capped to a share of the axis and cut with an ellipsis, so a long label never overlaps its neighbour
+   or pushes the page sideways; the table keeps the full text. Five labels sit ~25% apart and an edge label grows
+   one way only, so each gets 14% (14 + 7 < 22, the closest gap on a 24-hour axis). */
+.ds-chart-x span { position: absolute; top: 0; max-width: 14%; overflow: hidden; text-overflow: ellipsis; transform: translateX(-50%); white-space: nowrap; }
 .ds-chart-x span[data-edge="start"] { transform: none; }
 .ds-chart-x span[data-edge="end"] { transform: translateX(-100%); }
 .ds-table-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--ds-line); border-radius: 12px; }
@@ -186,6 +189,8 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
   .ds-chart { grid-template-rows: 200px auto; }
   /* Five hour labels do not fit at 320px: keep the first, middle and last (never hide the end label). */
   .ds-chart-x span:nth-child(even):not(:last-child) { display: none; }
+  /* With every other label hidden, at most three sit ~50% apart: 30% each (30 + 15 < 50). */
+  .ds-chart-x span { max-width: 30%; }
   /* Stat tiles become one grouped card: label and note on the left, value on the right. */
   .ds-stats { grid-template-columns: minmax(0, 1fr); gap: 0; border-radius: 18px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
   .ds-stat { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 12px 16px; border-radius: 0; background: transparent; box-shadow: none; }
