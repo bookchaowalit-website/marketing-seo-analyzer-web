@@ -94,14 +94,15 @@
 .ds-plain { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 980px; background: transparent; color: var(--ds-accent); font-size: 15px; cursor: pointer; }
 .ds-plain:hover { background: var(--ds-hover); }
 
-/* Chart panel: the "Show table" summary of a native <details> sits at the top right (it works without
-   JavaScript); while the table is open the chart under it is hidden. */
-.ds-chart-panel { position: relative; }
-.ds-chart-panel > .ds-panel-head { min-height: 44px; padding-right: 108px; }
-.ds-chart-switch > summary { position: absolute; top: 20px; right: 20px; list-style: none; }
+/* Chart panel: "Show table" is the summary of a native <details> (works without JavaScript) in the panel head's
+   flex row, sized by its own text, so with large text it wraps under the title instead of covering it.
+   :has() swaps the chart for the table while it is open; a browser without :has() simply shows both. */
+.ds-chart-switch { margin-left: auto; }
+.ds-chart-switch > summary { list-style: none; }
 .ds-chart-switch > summary::-webkit-details-marker { display: none; }
 .ds-chart-switch[open] > summary { background: var(--ds-hover); }
-.ds-chart-switch[open] + .ds-chart { display: none; }
+.ds-chart-panel:has(.ds-chart-switch[open]) .ds-chart { display: none; }
+.ds-chart-panel:not(:has(.ds-chart-switch[open])) .ds-table-wrap { display: none; }
 
 /* Line chart: the SVG only draws; axis labels are HTML so they never stretch. */
 .ds-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 240px auto; column-gap: 8px; }
@@ -182,7 +183,6 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
   .ds-head > .ds-segmented { width: 100%; }
   .ds-segmented button { min-width: 0; }
   .ds-panel { padding: 16px; }
-  .ds-chart-switch > summary { top: 16px; right: 16px; }
   .ds-chart { grid-template-rows: 200px auto; }
   /* Five hour labels do not fit at 320px: keep the first, middle and last (never hide the end label). */
   .ds-chart-x span:nth-child(even):not(:last-child) { display: none; }

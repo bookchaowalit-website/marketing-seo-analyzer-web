@@ -65,8 +65,10 @@ describe("dashboard shell", () => {
     // A disclosure, not a pressed button: the name stays "Show table" and the browser announces open or closed.
     expect(summary.textContent).toBe("Show table");
     expect(host.querySelector("[aria-pressed]")).toBeNull();
-    expect([...details.querySelectorAll("tbody tr")].map((row) => row.textContent)).toEqual(["001", "013 (peak)", "022"]);
-    expect(details.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("Load as a table");
+    // The switch sits in the head's flex row, so it is sized by its text and wraps under the title when needed.
+    expect(details.parentElement?.className).toBe("ds-panel-head");
+    expect([...host.querySelectorAll("tbody tr")].map((row) => row.textContent)).toEqual(["001", "013 (peak)", "022"]);
+    expect(host.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("Load as a table");
     press(summary);
     expect(details.open).toBe(false);
     expect(host.querySelector("svg")).not.toBeNull();
@@ -74,7 +76,7 @@ describe("dashboard shell", () => {
 
   it("puts the table in the server HTML, so it opens without JavaScript", () => {
     const html = renderToStaticMarkup(<ChartPanel title="Load" summary="s" values={[1, 3]} labels={["00", "01"]} ticks={[0, 1]} max={4} unit="kWh" labelHeading="Hour" />);
-    expect(html).toMatch(/<details class="ds-chart-switch"><summary class="ds-plain">Show table<\/summary>.*<table class="ds-table">.*<\/details><div class="ds-chart">/);
+    expect(html).toMatch(/<div class="ds-panel-head">.*<details class="ds-chart-switch"><summary class="ds-plain">Show table<\/summary><\/details><\/div><div class="ds-table-wrap".*<table class="ds-table">.*<\/table><\/div><div class="ds-chart">/);
     expect(html).toContain("<td>3 (peak)</td>");
   });
 

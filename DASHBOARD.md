@@ -16,8 +16,9 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
 - **At most four stat tiles**: label, value with its unit, and one line of context ("at 13:00").
   On phones they become one grouped card with the value on the right.
 - **One main chart**, with a `Show table` switch so every value can be read without the drawing.
-  The switch is a native `<details>` (its name stays `Show table`, the browser announces open or
-  closed), so the table opens without JavaScript; CSS hides the chart while it is open.
+  The switch is a native `<details>` in the panel head's flex row (its name stays `Show table`, the
+  browser announces open or closed), sized by its own text so it wraps under the title with large text;
+  the table opens without JavaScript and CSS (`:has`) hides the chart while it is open.
   The SVG only draws; axis labels are HTML, so they never stretch. The y scale tops out at four
   round grid gaps (two significant digits) that reach `max`, and the line uses the same top, so each
   label is the value of its grid line. The chart's `aria-label` says what it shows (low, peak).

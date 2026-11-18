@@ -49,7 +49,8 @@ type ChartProps = {
 
 /**
  * One line chart with a "Show table" disclosure, so every value can be read without the drawing.
- * The disclosure is a native <details>, so the table opens without JavaScript; CSS hides the chart while it is open.
+ * The disclosure is a native <details> in the head, so the table opens without JavaScript and the switch sits in the
+ * head's flex row at its own size; CSS (:has) shows the table and hides the chart while it is open.
  */
 export function ChartPanel({ title, subtitle, summary, values, labels, ticks, tickLabels, max, unit, labelHeading }: ChartProps) {
   const headingId = useId();
@@ -67,23 +68,23 @@ export function ChartPanel({ title, subtitle, summary, values, labels, ticks, ti
           <h2 id={headingId}>{title}</h2>
           {subtitle ? <p>{subtitle}</p> : null}
         </div>
+        <details className="ds-chart-switch">
+          <summary className="ds-plain">Show table</summary>
+        </details>
       </div>
-      <details className="ds-chart-switch">
-        <summary className="ds-plain">Show table</summary>
-        <div className="ds-table-wrap" tabIndex={0} role="region" aria-label={`${title} as a table`}>
-          <table className="ds-table">
-            <thead><tr><th scope="col">{labelHeading}</th><th scope="col">{unit}</th></tr></thead>
-            <tbody>
-              {values.map((value, index) => (
-                <tr key={index} data-peak={index === peak ? "true" : undefined}>
-                  <th scope="row">{labels[index]}</th>
-                  <td>{value}{index === peak ? " (peak)" : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
+      <div className="ds-table-wrap" tabIndex={0} role="region" aria-label={`${title} as a table`}>
+        <table className="ds-table">
+          <thead><tr><th scope="col">{labelHeading}</th><th scope="col">{unit}</th></tr></thead>
+          <tbody>
+            {values.map((value, index) => (
+              <tr key={index} data-peak={index === peak ? "true" : undefined}>
+                <th scope="row">{labels[index]}</th>
+                <td>{value}{index === peak ? " (peak)" : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className="ds-chart">
         <div className="ds-chart-y" aria-hidden="true">{steps.map((step, index) => <span key={index}>{step}</span>)}</div>
         <svg viewBox="0 0 1000 100" preserveAspectRatio="none" role="img" aria-label={summary}>
