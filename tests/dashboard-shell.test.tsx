@@ -178,6 +178,8 @@ describe("dashboard shell", () => {
     expect(forced).toBeGreaterThan(normal);
     const block = css.slice(forced, css.indexOf("\n}", forced));
     expect(block).toContain('.ds-row[aria-pressed="true"] { border-left: 3px solid Highlight; padding-left: 9px; }');
+    // The area fill would turn into one solid forced colour over the grid, so forced colors leave it out.
+    expect(block).toContain(".ds-chart-area { fill: none; }");
   });
 
   it("maps values onto a 1000 x 100 board, clamped, with a safe max", () => {

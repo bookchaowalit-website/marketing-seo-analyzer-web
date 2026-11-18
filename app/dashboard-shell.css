@@ -201,9 +201,11 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
 }
 @media (prefers-reduced-motion: reduce) { .ds *, .ds *::before, .ds *::after { transition: none !important; } }
 /* Forced colors (Windows contrast themes) drop box-shadow and repaint backgrounds, which would erase the selected
-   row's inset bar: draw it as a real left border in the Highlight system colour instead (padding keeps the text put). */
+   row's inset bar: draw it as a real left border in the Highlight system colour instead (padding keeps the text put).
+   The chart's area fill would be forced to one solid colour over the grid, so it is left out; the line still draws. */
 @media (forced-colors: active) {
   .ds-row[aria-pressed="true"] { border-left: 3px solid Highlight; padding-left: 9px; }
+  .ds-chart-area { fill: none; }
 }
 
 /* The top bar is sticky: keep skip-link targets and keyboard-focused controls clear of it when the page scrolls to them. */

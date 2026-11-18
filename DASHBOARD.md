@@ -39,7 +39,7 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
 - **Floor:** text ≥ 12px, controls ≥ 44px, 3px focus ring, 4.5:1 text contrast (placeholders
   included) and 3:1 for chart lines, grid lines and input edges in light and dark, no horizontal
   scroll at 320px. A selected row shows the accent bar, not only a tint; in forced colors
-  the bar is a real `Highlight` left border.
+  the bar is a real `Highlight` left border and the chart drops its area fill.
 
 ## Pieces
 
