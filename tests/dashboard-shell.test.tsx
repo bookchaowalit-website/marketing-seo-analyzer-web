@@ -99,6 +99,8 @@ describe("dashboard shell", () => {
     render(<ChartPanel title="Two" summary="s" values={[1, 2]} labels={["a", "b"]} ticks={[0, 1]} max={4} unit="%" labelHeading="x" />);
     expect(host.querySelector(".ds-chart-dot")).toBeNull();
     expect(host.querySelector(".ds-chart-area")?.getAttribute("points")).toBe("0,100 0,75 1000,50 1000,100");
+    // Paint order: area, then grid, then the line, so the grid shows across the filled area.
+    expect([...(host.querySelector("svg")?.children ?? [])].map((el) => el.getAttribute("class"))).toEqual(["ds-chart-area", "ds-chart-grid", "ds-chart-peak", "ds-chart-line"]);
   });
 
   it("labels the y axis on the same top as the line, with enough decimals for small scales", () => {

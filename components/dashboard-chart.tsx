@@ -87,9 +87,10 @@ export function ChartPanel({ title, subtitle, summary, values, labels, ticks, ti
       <div className="ds-chart">
         <div className="ds-chart-y" aria-hidden="true">{steps.map((step, index) => <span key={index}>{step}</span>)}</div>
         <svg viewBox="0 0 1000 100" preserveAspectRatio="none" role="img" aria-label={summary}>
-          <g className="ds-chart-grid">{[0, 25, 50, 75, 100].map((y) => <line key={y} x1="0" x2="1000" y1={y} y2={y} />)}</g>
           {/* One value has no line to draw or area to fill, so it gets a dot where it is. */}
           {values.length > 1 ? <polygon className="ds-chart-area" points={`0,100 ${points} 1000,100`} /> : null}
+          {/* The grid comes after the filled area, so the opaque fill never hides the grid lines under the line. */}
+          <g className="ds-chart-grid">{[0, 25, 50, 75, 100].map((y) => <line key={y} x1="0" x2="1000" y1={y} y2={y} />)}</g>
           {peak >= 0 ? <line className="ds-chart-peak" x1={(peak / Math.max(values.length - 1, 1)) * 1000} x2={(peak / Math.max(values.length - 1, 1)) * 1000} y1="0" y2="100" /> : null}
           {values.length === 1 ? <line className="ds-chart-dot" x1="0" x2="0" y1={dotY} y2={dotY} /> : <polyline className="ds-chart-line" points={points} />}
         </svg>
