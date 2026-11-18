@@ -64,7 +64,8 @@ describe("SEO check page", () => {
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     type(host.querySelector("input") as HTMLInputElement, "https://example.com");
     await press(button("Copy report"));
-    expect(writeText.mock.calls[0][0]).toMatch(/^https:\/\/example\.com\nSEO snapshot score: 100\/100\nPASS Title present/);
+    // The HTML is still the sample, so the copied text says the score is not for example.com.
+    expect(writeText.mock.calls[0][0]).toMatch(/^https:\/\/example\.com\nSEO snapshot score: 100\/100 \(scored on the built-in sample HTML, not on this URL\)\nPASS Title present/);
     expect(button("Copied")).toBeTruthy();
     expect(host.querySelector('[role="status"]')?.textContent).toBe("Report copied.");
     act(() => { vi.advanceTimersByTime(1500); });

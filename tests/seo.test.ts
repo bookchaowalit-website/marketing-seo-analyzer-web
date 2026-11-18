@@ -87,5 +87,6 @@ describe("helpers", () => {
     expect(text.split("\n")[0]).toBe("https://x.test");
     expect(text).toContain("SEO snapshot score: 100/100");
     expect(text).toContain("PASS H1 present — Hello");
+    expect(formatReport("https://x.test", inspect(SAMPLE), true).split("\n")[1]).toBe("SEO snapshot score: 100/100 (scored on the built-in sample HTML, not on this URL)");
   });
 });

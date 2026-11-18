@@ -20,7 +20,7 @@ export default function Home() {
 
   const copyReport = async () => {
     try {
-      await navigator.clipboard.writeText(formatReport(url, report));
+      await navigator.clipboard.writeText(formatReport(url, report, isSample));
       setCopied("done");
       window.setTimeout(() => setCopied("idle"), 1500);
     } catch {

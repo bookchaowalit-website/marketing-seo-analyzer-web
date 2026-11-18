@@ -78,7 +78,9 @@ export function verdict(score: number): string {
   return score >= 80 ? "Healthy signal" : score >= 50 ? "Needs attention" : "Incomplete signal";
 }
 
-export function formatReport(label: string, report: Report): string {
+export function formatReport(label: string, report: Report, sample = false): string {
   const lines = report.checks.map((check) => `${!check.applicable ? "N/A" : check.ok ? "PASS" : "FAIL"} ${check.name} — ${check.detail}`);
-  return `${label}\nSEO snapshot score: ${report.score}/100\n${lines.join("\n")}`;
+  // A copied report travels without the page's "Sample data" pill, so it says where the score came from itself.
+  const source = sample ? " (scored on the built-in sample HTML, not on this URL)" : "";
+  return `${label}\nSEO snapshot score: ${report.score}/100${source}\n${lines.join("\n")}`;
 }

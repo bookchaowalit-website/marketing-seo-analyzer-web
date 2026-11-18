@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ChartPanel, DashFoot, DashTop, Pill, Segmented, Stat, axisSteps, linePoints } from "@/components/dashboard-shell";
+import { ChartPanel, DashFoot, DashTop, Pill, Segmented, Stat, axisSteps, chartTop, linePoints } from "@/components/dashboard-shell";
 
 // Tests for the copied-in Dashboard shell itself, so every app that copies it covers all of it.
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -56,12 +57,30 @@ describe("dashboard shell", () => {
     const ticks = [...host.querySelectorAll<HTMLElement>(".ds-chart-x span")];
     expect(ticks.map((span) => [span.textContent, span.style.left, span.dataset.edge ?? ""])).toEqual([["00", "0%", "start"], ["01", "50%", ""], ["02", "100%", "end"]]);
     expect(host.querySelector(".ds-chart-peak")?.getAttribute("x1")).toBe("500");
-    press(button("Show table"));
-    expect(button("Show chart").getAttribute("aria-pressed")).toBe("true");
-    expect([...host.querySelectorAll("tbody tr")].map((row) => row.textContent)).toEqual(["001", "013 (peak)", "022"]);
-    expect(host.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("Load as a table");
-    press(button("Show chart"));
+    const details = host.querySelector<HTMLDetailsElement>("details.ds-chart-switch") as HTMLDetailsElement;
+    const summary = details.querySelector("summary") as HTMLElement;
+    expect(details.open).toBe(false);
+    press(summary);
+    expect(details.open).toBe(true);
+    // A disclosure, not a pressed button: the name stays "Show table" and the browser announces open or closed.
+    expect(summary.textContent).toBe("Show table");
+    expect(host.querySelector("[aria-pressed]")).toBeNull();
+    expect([...details.querySelectorAll("tbody tr")].map((row) => row.textContent)).toEqual(["001", "013 (peak)", "022"]);
+    expect(details.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("Load as a table");
+    press(summary);
+    expect(details.open).toBe(false);
     expect(host.querySelector("svg")).not.toBeNull();
+  });
+
+  it("puts the table in the server HTML, so it opens without JavaScript", () => {
+    const html = renderToStaticMarkup(<ChartPanel title="Load" summary="s" values={[1, 3]} labels={["00", "01"]} ticks={[0, 1]} max={4} unit="kWh" labelHeading="Hour" />);
+    expect(html).toMatch(/<details class="ds-chart-switch"><summary class="ds-plain">Show table<\/summary>.*<table class="ds-table">.*<\/details><div class="ds-chart">/);
+    expect(html).toContain("<td>3 (peak)</td>");
+  });
+
+  it("draws a label once when two ticks point at the same value", () => {
+    render(<ChartPanel title="One" summary="s" values={[5]} labels={["a to b"]} ticks={[0, 0]} tickLabels={["−7d", "now"]} max={5} unit="clicks" labelHeading="Interval" />);
+    expect([...host.querySelectorAll(".ds-chart-x span")].map((span) => span.textContent)).toEqual(["−7d"]);
   });
 
   it("uses short tick text when given and draws no peak for an empty series", () => {
@@ -87,6 +106,8 @@ describe("dashboard shell", () => {
     expect(axisSteps(0.002)).toEqual([0, 0.0005, 0.001, 0.0015, 0.002]);
     expect(axisSteps(0.02)).toEqual([0, 0.005, 0.01, 0.015, 0.02]);
     expect(axisSteps(1000)).toEqual([0, 250, 500, 750, 1000]);
+    expect(axisSteps(100)).toEqual([0, 25, 50, 75, 100]);
+    expect(chartTop(100)).toBe(100);
     render(<ChartPanel title="Zero" summary="s" values={[0, 0]} labels={["a", "b"]} ticks={[0, 1]} max={0} unit="%" labelHeading="x" />);
     expect([...host.querySelectorAll(".ds-chart-y span")].map((span) => span.textContent)).toEqual(["0", "0.25", "0.5", "0.75", "1"]);
   });
@@ -94,10 +115,20 @@ describe("dashboard shell", () => {
   it("keeps only the current rows in the table when labels repeat", () => {
     const chart = (values: number[], labels: string[]) => <ChartPanel title="Load" summary="s" values={values} labels={labels} ticks={[0]} max={4} unit="kWh" labelHeading="Hour" />;
     render(chart([1, 2, 3], ["08:00", "08:00", "09:00"]));
-    press(button("Show table"));
     expect(host.querySelectorAll("tbody tr")).toHaveLength(3);
     render(chart([3, 1], ["09:00", "08:00"]));
     expect([...host.querySelectorAll("tbody tr")].map((row) => row.textContent)).toEqual(["09:003 (peak)", "08:001"]);
+  });
+
+  it("rounds the top up to round grid gaps and draws the line on that same top", () => {
+    // max 50 has 12.5 gaps; labelled 13 / 38 they would lie, so the scale grows to 52 and every label is exact.
+    expect(axisSteps(50)).toEqual([0, 13, 26, 39, 52]);
+    expect(axisSteps(100.25)).toEqual([0, 26, 52, 78, 104]);
+    expect(chartTop(50.5)).toBe(52);
+    expect(linePoints([26, 52], 50)).toBe("0,50 1000,0");
+    render(<ChartPanel title="Odd" summary="s" values={[100.25]} labels={["a"]} ticks={[0]} max={100.25} unit="%" labelHeading="x" />);
+    expect(host.querySelector(".ds-chart-y span:last-child")?.textContent).toBe("104");
+    expect(Number(host.querySelector(".ds-chart-dot")?.getAttribute("y1"))).toBeCloseTo(100 - (100.25 / 104) * 100);
   });
 
   it("maps values onto a 1000 x 100 board, clamped, with a safe max", () => {

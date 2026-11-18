@@ -16,8 +16,11 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
 - **At most four stat tiles**: label, value with its unit, and one line of context ("at 13:00").
   On phones they become one grouped card with the value on the right.
 - **One main chart**, with a `Show table` switch so every value can be read without the drawing.
-  The SVG only draws; axis labels are HTML, so they never stretch. The chart's `aria-label`
-  says what it shows (low, peak).
+  The switch is a native `<details>` (its name stays `Show table`, the browser announces open or
+  closed), so the table opens without JavaScript; CSS hides the chart while it is open.
+  The SVG only draws; axis labels are HTML, so they never stretch. The y scale tops out at four
+  round grid gaps (two significant digits) that reach `max`, and the line uses the same top, so each
+  label is the value of its grid line. The chart's `aria-label` says what it shows (low, peak).
 - **Breakdown list** beside the chart: name, one line of detail, value and a share bar. When a
   row selects something it is a button with `aria-pressed`, and a callout under the list says
   what the selection means.
@@ -36,8 +39,8 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
 | Piece | Where |
 |---|---|
 | Tokens `--ds-*` (light + dark, same palette as the App shell), top bar, head, segmented control, stat tiles, panels, line chart, table, breakdown rows (button or static), share bar, callout, form fields, slider, filled button, pills, footer | `app/dashboard-shell.css` |
-| `DashTop`, `DashFoot`, `Segmented`, `Stat`, `Pill` (server-safe), re-exporting `ChartPanel` and `linePoints` | `components/dashboard-shell.tsx` |
-| `ChartPanel` (chart + table switch, optional short `tickLabels`), `linePoints`; `"use client"` because the table switch has state | `components/dashboard-chart.tsx` |
+| `DashTop`, `DashFoot`, `Segmented`, `Stat`, `Pill`, re-exporting `ChartPanel`, `chartTop`, `axisSteps` and `linePoints` (all server-safe) | `components/dashboard-shell.tsx` |
+| `ChartPanel` (chart + `<details>` table switch, optional short `tickLabels`, repeated ticks drawn once), `chartTop`, `axisSteps`, `linePoints`; no state, so no `"use client"` | `components/dashboard-chart.tsx` |
 | Tests for the shell itself, so an app that uses only part of it still covers all of it | `tests/dashboard-shell.test.tsx` |
 
 Put the font variable on `<html>` (not `<body>`): the tokens are defined on `:root`, so a font
@@ -45,7 +48,7 @@ variable set lower down never reaches them.
 
 ## Moving an app onto the shell
 
-1. Copy the four files (CSS, `dashboard-shell.tsx`, the client-only `dashboard-chart.tsx`, shell test); import `./dashboard-shell.css` from `globals.css` and drop the old theme.
+1. Copy the five files (CSS, `dashboard-shell.tsx`, `dashboard-chart.tsx`, shell test, this file); import `./dashboard-shell.css` from `globals.css` and drop the old theme.
 2. Keep the app's `lib/` maths; add small helpers for the stats (total, low, share) there.
 3. Rebuild the page as top bar → head (title, period line, period switch) → stat tiles →
    chart panel + breakdown panel → data note → footer.
