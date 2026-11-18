@@ -170,6 +170,14 @@ describe("dashboard shell", () => {
     expect(host.querySelector(".ds-chart-dot")?.getAttribute("x1")).toBe("500");
   });
 
+  it("hides the table switch where :has() is missing, since the chart and table then both show", () => {
+    const css = readFileSync(join(process.cwd(), "app/dashboard-shell.css"), "utf8");
+    const swap = css.indexOf(".ds-chart-panel:not(:has(.ds-chart-switch[open])) .ds-table-wrap { display: none; }");
+    const fallback = css.indexOf("@supports not selector(:has(*)) {\n  .ds-chart-switch { display: none; }\n}");
+    expect(swap).toBeGreaterThan(-1);
+    expect(fallback).toBeGreaterThan(swap);
+  });
+
   it("keeps the selected-row bar in forced colors, as a real border after the normal rule", () => {
     const css = readFileSync(join(process.cwd(), "app/dashboard-shell.css"), "utf8");
     const normal = css.indexOf('.ds-row[aria-pressed="true"] { background: var(--ds-selected); box-shadow: inset 3px 0 0 var(--ds-accent); }');

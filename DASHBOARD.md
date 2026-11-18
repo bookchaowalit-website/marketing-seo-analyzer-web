@@ -20,7 +20,8 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
 - **One main chart**, with a `Show table` switch so every value can be read without the drawing.
   The switch is a native `<details>` in the panel head's flex row (its name stays `Show table`, the
   browser announces open or closed), sized by its own text so it wraps under the title with large text;
-  the table opens without JavaScript and CSS (`:has`) hides the chart while it is open.
+  the table opens without JavaScript and CSS (`:has`) hides the chart while it is open. A browser
+  without `:has()` shows both and hides the switch (`@supports not selector(:has(*))`).
   The SVG only draws; axis labels are HTML, so they never stretch. Each x label is capped at the
   room its neighbours leave (`labelRoom`, from the real tick gaps; phones need twice the room) and cut
   with an ellipsis, inner labels that would still collide are left out (never the first or last one passed), so pass short `tickLabels`.

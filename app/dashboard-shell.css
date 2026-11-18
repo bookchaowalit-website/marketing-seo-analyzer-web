@@ -104,6 +104,10 @@
 .ds-chart-switch[open] > summary { background: var(--ds-hover); }
 .ds-chart-panel:has(.ds-chart-switch[open]) .ds-chart { display: none; }
 .ds-chart-panel:not(:has(.ds-chart-switch[open])) .ds-table-wrap { display: none; }
+/* Without :has() the chart and the table both show and the switch would change nothing, so it is hidden. */
+@supports not selector(:has(*)) {
+  .ds-chart-switch { display: none; }
+}
 
 /* Line chart: the SVG only draws; axis labels are HTML so they never stretch. */
 .ds-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 240px auto; column-gap: 8px; }
