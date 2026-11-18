@@ -2,6 +2,8 @@
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ChartPanel, DashFoot, DashTop, Pill, Segmented, Stat, axisSteps, chartTop, labelRoom, linePoints } from "@/components/dashboard-shell";
 
@@ -166,6 +168,16 @@ describe("dashboard shell", () => {
     expect([...host.querySelectorAll<HTMLElement>(".ds-chart-x span")].map((span) => [span.textContent, span.style.left, span.dataset.edge])).toEqual([["−4h", "0%", "start"], ["now", "100%", "end"]]);
     render(<ChartPanel title="One" summary="s" values={[5]} labels={["a to now"]} ticks={[0, 1]} tickLabels={["−2h", "now"]} max={10} unit="%" labelHeading="Interval" buckets />);
     expect(host.querySelector(".ds-chart-dot")?.getAttribute("x1")).toBe("500");
+  });
+
+  it("keeps the selected-row bar in forced colors, as a real border after the normal rule", () => {
+    const css = readFileSync(join(process.cwd(), "app/dashboard-shell.css"), "utf8");
+    const normal = css.indexOf('.ds-row[aria-pressed="true"] { background: var(--ds-selected); box-shadow: inset 3px 0 0 var(--ds-accent); }');
+    const forced = css.indexOf("@media (forced-colors: active) {");
+    expect(normal).toBeGreaterThan(-1);
+    expect(forced).toBeGreaterThan(normal);
+    const block = css.slice(forced, css.indexOf("\n}", forced));
+    expect(block).toContain('.ds-row[aria-pressed="true"] { border-left: 3px solid Highlight; padding-left: 9px; }');
   });
 
   it("maps values onto a 1000 x 100 board, clamped, with a safe max", () => {
