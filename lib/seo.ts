@@ -66,7 +66,7 @@ export function inspect(html: string): Report {
     { name: "Meta description", ok: description.length >= 50, applicable: true, detail: `${description.length} chars` },
     { name: "H1 present", ok: Boolean(h1), applicable: true, detail: h1 || "missing" },
     images === 0
-      ? { name: "Images have alt", ok: false, applicable: false, detail: "no images" }
+      ? { name: "Images have alt", ok: true, applicable: false, detail: "no images" } // ok stays true so MCP callers using !ok do not flag it; applicable:false marks N/A
       : { name: "Images have alt", ok: withAlt === images, applicable: true, detail: `${withAlt}/${images}` },
     { name: "Has links", ok: links > 0, applicable: true, detail: String(links) },
   ];

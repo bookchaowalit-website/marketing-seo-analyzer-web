@@ -10,11 +10,11 @@ describe("inspect on the sample", () => {
     expect(report.checks.every((c) => c.ok)).toBe(true);
   });
 
-  it("scores an empty snapshot 0: with no images the alt check is not applicable, not a pass", () => {
+  it("scores an empty snapshot 0: with no images the alt check is not applicable (ok stays true for older MCP callers that filter on !ok)", () => {
     const report = inspect("");
     expect(report.score).toBe(0);
     expect(check("", "Title present").detail).toBe("missing");
-    expect(check("", "Images have alt")).toEqual({ name: "Images have alt", ok: false, applicable: false, detail: "no images" });
+    expect(check("", "Images have alt")).toEqual({ name: "Images have alt", ok: true, applicable: false, detail: "no images" });
   });
 
   it("leaves the alt check out of the score when there are no images", () => {
