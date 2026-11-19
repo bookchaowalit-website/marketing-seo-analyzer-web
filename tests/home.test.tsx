@@ -12,7 +12,7 @@ let host: HTMLDivElement;
 const button = (text: string) => [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === text) as HTMLButtonElement;
 const press = async (el: Element) => { await act(async () => { el.dispatchEvent(new MouseEvent("click", { bubbles: true })); }); };
 const stats = () => [...host.querySelectorAll(".ds-stat")].map((tile) => tile.textContent);
-const textarea = () => host.querySelector("textarea") as HTMLTextAreaElement;
+const textarea = () => host.querySelector("textarea:not([readonly])") as HTMLTextAreaElement;
 // React listens for the native input event; set the value through the prototype setter so it notices.
 function type(el: HTMLInputElement | HTMLTextAreaElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), "value")!.set!;
@@ -77,11 +77,25 @@ describe("SEO check page", () => {
     type(textarea(), "<p>Draft</p>");
     await press(button("Copy report"));
     expect(host.querySelector('[role="status"]')?.textContent).toContain("Copy failed");
+    // The report falls back to a read-only box so it can still be copied by hand.
+    const fallback = host.querySelector("textarea[readonly]") as HTMLTextAreaElement;
+    expect(fallback.closest("label")?.textContent).toContain("Select the report and copy it by hand");
+    expect(fallback.value).toMatch(/^https:\/\/bookchaowalit\.com\nSEO snapshot score: /);
+    const select = vi.spyOn(fallback, "select");
+    act(() => { fallback.dispatchEvent(new FocusEvent("focusin", { bubbles: true })); fallback.focus(); });
+    expect(select).toHaveBeenCalled();
     await press(button("Reset sample"));
     expect(textarea().value).toBe(SAMPLE);
     expect((host.querySelector("input") as HTMLInputElement).value).toBe("https://bookchaowalit.com");
     expect(host.querySelector(".ds-head")?.textContent).toContain("Sample data");
     expect(host.querySelector('[role="status"]')?.textContent).toBe("");
+    expect(host.querySelector("textarea[readonly]")).toBeNull();
+  });
+
+  it("puts the checks before the snapshot form and labels the URL as report-only", () => {
+    const panels = [...host.querySelectorAll(".ds-grid > .ds-panel")].map((panel) => panel.getAttribute("aria-labelledby"));
+    expect(panels).toEqual(["checks-heading", "source-heading"]);
+    expect((host.querySelector("input") as HTMLInputElement).closest("label")?.textContent).toBe("Page URL (for the report only)");
   });
 
   it("shows an empty state instead of a score when the HTML box is empty or only spaces", () => {

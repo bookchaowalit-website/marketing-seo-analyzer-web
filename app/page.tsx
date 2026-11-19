@@ -17,10 +17,11 @@ export default function Home() {
   const applicable = report.checks.filter((check) => check.applicable);
   const passed = applicable.filter((check) => check.ok).length;
   const skipped = report.checks.length - applicable.length;
+  const reportText = formatReport(url, report, isSample);
 
   const copyReport = async () => {
     try {
-      await navigator.clipboard.writeText(formatReport(url, report, isSample));
+      await navigator.clipboard.writeText(reportText);
       setCopied("done");
       window.setTimeout(() => setCopied("idle"), 1500);
     } catch {
@@ -53,24 +54,6 @@ export default function Home() {
         </ul>
 
         <div className="ds-grid">
-          <section className="ds-panel" aria-labelledby="source-heading">
-            <div className="ds-panel-head">
-              <div>
-                <h2 id="source-heading">Snapshot</h2>
-                <p>Paste the page&apos;s HTML; the URL is only a label</p>
-              </div>
-              <button type="button" className="ds-plain" onClick={reset}>Reset sample</button>
-            </div>
-            <div className="ds-form">
-              <label className="ds-field">URL label
-                <input className="ds-input" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" autoComplete="off" />
-              </label>
-              <label className="ds-field">HTML
-                <textarea className="ds-input" value={html} onChange={(event) => setHtml(event.target.value)} spellCheck={false} />
-              </label>
-            </div>
-          </section>
-
           <section className="ds-panel" aria-labelledby="checks-heading">
             {blank ? (
               <>
@@ -105,12 +88,34 @@ export default function Home() {
                 </ul>
                 <div className="ds-actions" style={{ marginTop: 12 }}>
                   <button type="button" className="ds-button" onClick={copyReport}>{copied === "done" ? "Copied" : "Copy report"}</button>
-                  <span className="ds-sr" role="status">{copied === "done" ? "Report copied." : copied === "failed" ? "Copy failed. Select the checks and copy them by hand." : ""}</span>
-                  {copied === "failed" ? <span className="ds-note">Copy failed in this browser.</span> : null}
+                  <span className="ds-sr" role="status">{copied === "done" ? "Report copied." : copied === "failed" ? "Copy failed. The report is in the text box below to copy by hand." : ""}</span>
                 </div>
+                {copied === "failed" ? (
+                  <label className="ds-field" style={{ marginTop: 12 }}>This browser blocked copying. Select the report and copy it by hand
+                    <textarea className="ds-input" readOnly value={reportText} onFocus={(event) => event.currentTarget.select()} spellCheck={false} />
+                  </label>
+                ) : null}
               </>
             )}
           </section>
+          <section className="ds-panel" aria-labelledby="source-heading">
+            <div className="ds-panel-head">
+              <div>
+                <h2 id="source-heading">Snapshot</h2>
+                <p>Paste the page&apos;s HTML; the URL only goes in the report</p>
+              </div>
+              <button type="button" className="ds-plain" onClick={reset}>Reset sample</button>
+            </div>
+            <div className="ds-form">
+              <label className="ds-field">Page URL (for the report only)
+                <input className="ds-input" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" autoComplete="off" />
+              </label>
+              <label className="ds-field">HTML
+                <textarea className="ds-input" value={html} onChange={(event) => setHtml(event.target.value)} spellCheck={false} />
+              </label>
+            </div>
+          </section>
+
         </div>
 
         <p className="ds-note">The score comes only from the HTML in the box: title, description, heading, image alt text and links. Nothing is sent to the URL, and it is not a ranking prediction.</p>
