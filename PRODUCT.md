@@ -43,3 +43,4 @@ A portfolio visitor who wants a quick sanity check of a page snapshot.
 ## Boundaries
 
 - Browser-only apart from the stateless `/api/mcp` route, which analyses only the HTML sent to it.
+- A slow earlier Copy result can briefly replace the status of a newer Copy.
