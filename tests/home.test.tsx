@@ -98,6 +98,17 @@ describe("SEO check page", () => {
     expect((host.querySelector("input") as HTMLInputElement).closest("label")?.textContent).toBe("Page URL (for the report only)");
   });
 
+  it("offers a View results link right after the HTML box that lands on the results heading", () => {
+    for (const value of [SAMPLE, ""]) {
+      type(textarea(), value);
+      const link = textarea().closest("label")?.nextElementSibling as HTMLAnchorElement;
+      expect(link.tagName).toBe("A");
+      expect(link.textContent).toBe("View results");
+      expect(link.getAttribute("href")).toBe("#checks-heading");
+      expect(host.querySelector("#checks-heading")?.getAttribute("tabindex")).toBe("-1");
+    }
+  });
+
   it("shows an empty state instead of a score when the HTML box is empty or only spaces", () => {
     for (const value of ["", "   \n\t "]) {
       type(textarea(), value);

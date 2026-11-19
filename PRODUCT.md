@@ -25,6 +25,14 @@ A portfolio visitor who wants a quick sanity check of a page snapshot.
 - The checks are regex-level string parsing of a snapshot, not a browser DOM: script-built content is invisible to them.
 - No ranking prediction, history or saved reports.
 
+## Known limits
+
+- Copy report state is shared between presses: a timer from an earlier successful copy can hide the manual-copy box
+  of a later failed one, and a pending copy can bring that box back after Reset sample.
+- A very long `<title>` or `<h1>` in the pasted HTML is shown in full in its check row, with no line clamp, so one
+  row can take several phone screens (the copied report keeps the full text either way).
+- The Page URL input uses the shell's 15px input size, so Safari on iPhone zooms the page when it is tapped.
+
 ## Live URL and deploy state
 
 - Live: https://seo-analyzer.bookchaowalit.com (HTTP 200 on 2026-11-16, Dashboard shell).

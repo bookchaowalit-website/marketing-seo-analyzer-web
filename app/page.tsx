@@ -59,7 +59,7 @@ export default function Home() {
               <>
                 <div className="ds-panel-head">
                   <div>
-                    <h2 id="checks-heading">No HTML yet</h2>
+                    <h2 id="checks-heading" tabIndex={-1}>No HTML yet</h2>
                     <p>Nothing to score</p>
                   </div>
                 </div>
@@ -72,7 +72,7 @@ export default function Home() {
               <>
                 <div className="ds-panel-head">
                   <div>
-                    <h2 id="checks-heading">{verdict(report.score)}</h2>
+                    <h2 id="checks-heading" tabIndex={-1}>{verdict(report.score)}</h2>
                     <p>{report.score} out of 100{isSample ? " · from the sample HTML" : ""}</p>
                   </div>
                 </div>
@@ -113,6 +113,8 @@ export default function Home() {
               <label className="ds-field">HTML
                 <textarea className="ds-input" value={html} onChange={(event) => setHtml(event.target.value)} spellCheck={false} />
               </label>
+              {/* On a phone the results sit above this box: jump (and move focus) back to them. */}
+              <a className="ds-plain" href="#checks-heading" style={{ justifySelf: "start" }}>View results</a>
             </div>
           </section>
 
